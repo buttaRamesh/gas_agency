@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-h(p1d*j3q(ft5#pyacejnxdt7=*yx6s0a=qw9x151usbd(i%iw'
+# Now loaded securely from .env file
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Now loaded from .env file (defaults to False for safety)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+# Security: Specify allowed domain names (loaded from .env file)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 
 # Application definition
@@ -86,25 +90,29 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# Now supports environment-based configuration for easy switching between SQLite and MySQL
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DB_ENGINE = config('DB_ENGINE', default='django.db.backends.sqlite3')
+
+if DB_ENGINE == 'django.db.backends.sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': DB_ENGINE,
+            'NAME': BASE_DIR / config('DB_NAME', default='db.sqlite3'),
+        }
     }
-}
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'gasapp_db',          # The name of your database
-#         'USER': 'root',    # Your MySQL username
-#         'PASSWORD': 'admin', # Your MySQL password
-#         'HOST': 'localhost',          # Or your database server IP, e.g., 127.0.0.1
-#         'PORT': '3306',               # Default MySQL port
-#     }
-# }
+else:
+    # MySQL or other database configuration from environment
+    DATABASES = {
+        'default': {
+            'ENGINE': DB_ENGINE,
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='3306'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -131,11 +139,17 @@ REST_FRAMEWORK = {
 }
 
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:8000",  # For local development with a frontend on port 3000
-# ]
+# CORS Configuration - Now secure and environment-based
+# Only allow all origins if explicitly set to True in .env (NOT recommended for production)
+CORS_ORIGIN_ALLOW_ALL = config('CORS_ORIGIN_ALLOW_ALL', default=False, cast=bool)
 
-CORS_ORIGIN_ALLOW_ALL = True
+# Specify allowed origins from .env file (comma-separated list)
+if not CORS_ORIGIN_ALLOW_ALL:
+    CORS_ALLOWED_ORIGINS = config(
+        'CORS_ALLOWED_ORIGINS',
+        default='http://localhost:3000,http://localhost:8000',
+        cast=Csv()
+    )
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

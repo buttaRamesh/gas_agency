@@ -1,0 +1,21 @@
+# Core Django Framework
+Django>=5.2.7
+
+# Django REST Framework for API
+djangorestframework
+
+# Django Extensions (development tools)
+django-extensions
+
+# CORS Headers for cross-origin requests
+django-cors-headers
+
+# Filtering support for DRF
+django-filter
+
+# Environment variable management (SECURITY)
+python-decouple>=3.8
+
+# Database drivers (uncomment as needed)
+# mysqlclient  # For MySQL
+# psycopg2-binary  # For PostgreSQL
